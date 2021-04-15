@@ -2,13 +2,15 @@ import commander from 'commander';
 import chalk from 'chalk';
 import fs from 'fs';
 import jscodeshift, {
+  ExportAllDeclaration,
   ExportDeclaration,
   ExportDefaultDeclaration,
   ExportNamedDeclaration,
   Identifier,
+  ImportDeclaration,
   VariableDeclarator,
 } from 'jscodeshift';
-import { BeagleOptions } from './types';
+import { BeagleOptions, ImportExport } from './types';
 
 export const beagle = (
   projectRoot: string,
@@ -45,15 +47,55 @@ const getAllFiles = (directory: string): string[] => {
 };
 
 const findAllImportsAndExports = (files: string[]) => {
-  return files.map(findImportsAndExports);
-  // return findImportsAndExports(files[0]);
+  return files
+    .map(findImportsAndExports)
+    .reduce<{ imports: ImportExport[]; exports: ImportExport[] }>(
+      (acc, { path, imports, exports }) => {
+        return {
+          imports: [...acc.imports, ...imports],
+          exports: [...acc.exports, ...exports.map((e) => ({ path, name: e }))],
+        };
+      },
+      { imports: [], exports: [] },
+    );
 };
 
 const findImportsAndExports = (filePath: string) => {
   try {
-    const imports: string[] = [];
     const fileContents = fs.readFileSync(filePath, { encoding: 'utf8' });
     const fileAST = jscodeshift(fileContents);
+
+    // imports
+    const imports = fileAST
+      .find(ImportDeclaration)
+      .nodes()
+      .reduce<ImportExport[]>((acc, node) => {
+        const source = (node.source.value ?? '') as string;
+        let hasDefaultImport = false;
+        const namedImports: ImportExport[] =
+          node.specifiers?.reduce<ImportExport[]>((acc, specifier) => {
+            // @ts-expect-error
+            const importedName = specifier.imported?.name;
+            if (!importedName) {
+              hasDefaultImport = true;
+              return acc;
+            }
+
+            return [...acc, { path: source, name: importedName }];
+          }, []) ?? [];
+
+        return [
+          ...acc,
+          ...namedImports,
+          ...(hasDefaultImport ? [{ path: source, name: 'default' }] : []),
+        ];
+      }, []);
+
+    const exportAll = fileAST
+      .find(ExportAllDeclaration)
+      .nodes()
+      .map((node) => ({ path: (node.source.value ?? '') as string, name: 'default' }), []);
+
     // named exports
     const exports = fileAST
       .find(ExportNamedDeclaration)
@@ -70,7 +112,7 @@ const findImportsAndExports = (filePath: string) => {
     // default export
     if (fileAST.find(ExportDefaultDeclaration).length) exports.push('default');
 
-    return { path: filePath, imports, exports };
+    return { path: filePath, imports: imports.concat(exportAll), exports };
   } catch (e) {
     console.log(`error in ${filePath}`);
     throw e;
