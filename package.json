@@ -1,0 +1,19 @@
+{
+  "name": "ts-js-unused-exports",
+  "version": "0.1.0",
+  "description": "A CLI tool to assist with eliminating dead code by finding unused exports in TypeScript and Javascript.",
+  "main": "index.js",
+  "scripts": {
+    "test": "test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sfritton/ts-js-unused-exports.git"
+  },
+  "author": "Sam Fritton",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/sfritton/ts-js-unused-exports/issues"
+  },
+  "homepage": "https://github.com/sfritton/ts-js-unused-exports#readme"
+}
