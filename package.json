@@ -1,29 +1,29 @@
 {
-  "name": "ts-js-unused-exports",
+  "name": "beagle",
   "version": "0.1.0",
-  "description": "A CLI tool to assist with eliminating dead code by finding unused exports in TypeScript and Javascript.",
+  "description": "A CLI tool that sniffs out unused exports in TypeScript and Javascript.",
   "main": "./lib/index.js",
   "bin": {
-    "ts-js-unused-exports": "./lib/index.js"
+    "beagle": "./lib/index.js"
   },
   "scripts": {
     "start": "nodemon --watch 'src/**/*.ts' --exec 'ts-node' src/index.ts",
     "create": "npm run build && npm run test",
     "build": "tsc -p .",
-    "local": "sudo npm i -g && ts-js-unused-exports",
+    "local": "sudo npm i -g && beagle",
     "refresh": "rm -rf ./node_modules ./package-lock.json && npm install",
     "format": "prettier --write \"**/*.{js,jsx,ts,tsx,json,md}\""
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/sfritton/ts-js-unused-exports.git"
+    "url": "git+https://github.com/sfritton/beagle.git"
   },
   "author": "Sam Fritton",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/sfritton/ts-js-unused-exports/issues"
+    "url": "https://github.com/sfritton/beagle/issues"
   },
-  "homepage": "https://github.com/sfritton/ts-js-unused-exports#readme",
+  "homepage": "https://github.com/sfritton/beagle#readme",
   "dependencies": {
     "chalk": "^4.1.0",
     "clear": "^0.1.0",
@@ -32,6 +32,8 @@
     "path": "^0.12.7"
   },
   "devDependencies": {
+    "@types/clear": "^0.1.1",
+    "@types/figlet": "^1.5.0",
     "@types/node": "^14.14.40",
     "nodemon": "^2.0.7",
     "prettier": "^2.2.1",
