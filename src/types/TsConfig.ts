@@ -1,19 +1,3 @@
-export interface BeagleOptions {
-  verbose: boolean;
-}
-
-export interface ExportStatement {
-  /** The file that contains the statement. */
-  path: string;
-  /** The variable being imported/exported. */
-  name: string;
-}
-
-export interface ImportStatement extends ExportStatement {
-  /** The source of the imported variable. */
-  source: string;
-}
-
 interface MapLike<T> {
   [index: string]: T;
 }

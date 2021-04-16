@@ -1,9 +1,9 @@
 import commander from 'commander';
 import chalk from 'chalk';
 import path from 'path';
-import { BeagleOptions, ExportStatement, ImportStatement } from './types';
+import { BeagleOptions, ModuleLink } from './types';
 import { getSourceFiles, sourceFileExtensionRegex } from './getSourceFiles';
-import { analyzeSourceFile } from './analyzeSourceFile';
+import { analyzeSourceFile } from './sourceAnalyzer';
 
 export const beagle = (
   projectRoot: string,
@@ -21,9 +21,12 @@ export const beagle = (
 
   const files = getSourceFiles(fullPath);
   verbose && console.log(`Analyzing ${files.length} files ...`);
-  const { imports, exports } = findAllImportsAndExports(fullPath, files);
+  const moduleLinks = findAllModuleLinks(fullPath, files);
 
-  const unusedExports = exports.filter(({ name: exportName, path: exportPath }) => {
+  const exports = moduleLinks.filter(({ isExport }) => isExport);
+  const imports = moduleLinks.filter(({ isImport }) => isImport);
+
+  const unusedExports = exports.filter(({ name: exportName, filePath: exportPath }) => {
     const matchingImport = imports.find(
       ({ name: importName, source: importSource }) =>
         (importName === exportName || importName === '*') &&
@@ -35,7 +38,7 @@ export const beagle = (
   console.log(chalk.bold(`\nFound ${unusedExports.length} unused exports:`));
 
   const exportsByFile = unusedExports.reduce<Record<string, string[]>>(
-    (filesWithExports, { name: exportName, path: exportPath }) => {
+    (filesWithExports, { name: exportName, filePath: exportPath }) => {
       const fileExports = filesWithExports[exportPath] ?? [];
       return {
         ...filesWithExports,
@@ -50,16 +53,8 @@ export const beagle = (
   });
 };
 
-const findAllImportsAndExports = (projectRoot: string, files: string[]) => {
-  return files
-    .map((filePath) => analyzeSourceFile(projectRoot, filePath))
-    .reduce<{ imports: ImportStatement[]; exports: ExportStatement[] }>(
-      (acc, { imports, exports }) => {
-        return {
-          imports: [...acc.imports, ...imports],
-          exports: [...acc.exports, ...exports],
-        };
-      },
-      { imports: [], exports: [] },
-    );
+const findAllModuleLinks = (projectRoot: string, files: string[]) => {
+  const moduleLinksByFile = files.map((filePath) => analyzeSourceFile(projectRoot, filePath));
+
+  return ([] as ModuleLink[]).concat(...moduleLinksByFile);
 };

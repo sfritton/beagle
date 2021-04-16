@@ -1,6 +1,6 @@
 import fs from 'fs';
 import path from 'path';
-import { TsConfig } from './types';
+import { TsConfig } from '../types/TsConfig';
 
 /** Matches ./ or ../ */
 const relativePathRegex = /^\./;
