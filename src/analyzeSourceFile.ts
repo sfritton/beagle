@@ -6,16 +6,17 @@ import jscodeshift, {
   ExportNamedDeclaration,
   ImportDeclaration,
 } from 'jscodeshift';
+import { findImportSource } from './findImportSource';
 import { ExportStatement, ImportStatement } from './types';
 
 /** Find import and export statements in a JS/TS file. */
-export const analyzeSourceFile = (filePath: string) => {
+export const analyzeSourceFile = (projectRoot: string, filePath: string) => {
   try {
     const fileContents = fs.readFileSync(filePath, { encoding: 'utf8' });
     const fileAST = jscodeshift(fileContents);
 
     return {
-      imports: findImports(filePath, fileAST),
+      imports: findImports(filePath, fileAST, projectRoot),
       exports: findExports(filePath, fileAST),
     };
   } catch (e) {
@@ -24,12 +25,12 @@ export const analyzeSourceFile = (filePath: string) => {
   }
 };
 
-const findImports = (filePath: string, fileAST: Collection) => {
+const findImports = (filePath: string, fileAST: Collection, projectRoot: string) => {
   const imports = fileAST
     .find(ImportDeclaration)
     .nodes()
     .reduce<ImportStatement[]>((acc, node) => {
-      const source = (node.source.value ?? '') as string;
+      const source = findImportSource(projectRoot, filePath, (node.source.value ?? '') as string);
       let hasDefaultImport = false;
       const namedImports: ImportStatement[] =
         node.specifiers?.reduce<ImportStatement[]>((acc, specifier) => {
@@ -57,8 +58,8 @@ const findImports = (filePath: string, fileAST: Collection) => {
     .map(
       (node) => ({
         path: filePath,
-        source: (node.source.value ?? '') as string,
-        name: 'default',
+        source: findImportSource(projectRoot, filePath, (node.source.value ?? '') as string),
+        name: '*',
       }),
       [],
     );

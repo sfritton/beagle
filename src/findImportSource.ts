@@ -1,14 +1,11 @@
 import fs from 'fs';
 import path from 'path';
-import { ImportStatement, TsConfig } from './types';
+import { TsConfig } from './types';
 
 /** Matches ./ or ../ */
 const relativePathRegex = /^\./;
 
-export const findImportSource = (
-  { path: filePath, source }: ImportStatement,
-  projectRoot: string,
-) => {
+export const findImportSource = (projectRoot: string, filePath: string, source: string) => {
   const isRelative = relativePathRegex.test(source);
 
   if (isRelative) return resolveRelativePath(filePath, source);
