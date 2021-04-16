@@ -12,7 +12,8 @@
     "esModuleInterop": true,
     "resolveJsonModule": true,
     "paths": {
-      "helpers": ["src/packages/helpers/index"]
+      "helpers": ["src/packages/helpers/src/index"],
+      "helpers/*": ["src/packages/helpers/src/*"]
     }
   }
 }
