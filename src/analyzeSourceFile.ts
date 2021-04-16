@@ -31,24 +31,9 @@ const findImports = (filePath: string, fileAST: Collection, projectRoot: string)
     .nodes()
     .reduce<ImportStatement[]>((acc, node) => {
       const source = findImportSource(projectRoot, filePath, (node.source.value ?? '') as string);
-      let hasDefaultImport = false;
-      const namedImports: ImportStatement[] =
-        node.specifiers?.reduce<ImportStatement[]>((acc, specifier) => {
-          // @ts-expect-error
-          const importedName = specifier.imported?.name;
-          if (!importedName) {
-            hasDefaultImport = true;
-            return acc;
-          }
+      const statementImports = parseImportDeclaration(node, source, filePath);
 
-          return [...acc, { path: filePath, source, name: importedName }];
-        }, []) ?? [];
-
-      return [
-        ...acc,
-        ...namedImports,
-        ...(hasDefaultImport ? [{ path: filePath, source, name: 'default' }] : []),
-      ];
+      return [...acc, ...statementImports];
     }, []);
 
   // TODO: track this as an export as well
@@ -66,6 +51,36 @@ const findImports = (filePath: string, fileAST: Collection, projectRoot: string)
 
   return imports.concat(exportAll);
 };
+
+/** Parse an import statement, and return a list of imports.
+ * ```ts
+ * // analyzed-file.ts
+ * import React, { useState, useEffect } from 'react';
+ *
+ * // result
+ * [
+ *   { source: 'react', name: 'default', path: 'analyzed-file.ts' },
+ *   { source: 'react', name: 'useState', path: 'analyzed-file.ts' },
+ *   { source: 'react', name: 'useEffect', path: 'analyzed-file.ts' },
+ * ]
+ * ```
+ */
+const parseImportDeclaration = (
+  node: ImportDeclaration,
+  source: string,
+  filePath: string,
+): ImportStatement[] =>
+  node.specifiers?.map((specifier) => {
+    // import a from './path'
+    if (specifier.type === 'ImportDefaultSpecifier')
+      return { path: filePath, source, name: 'default' };
+
+    // import * as a from './path'
+    if (specifier.type === 'ImportNamespaceSpecifier') return { path: filePath, source, name: '*' };
+
+    // import { a } from './path'
+    return { path: filePath, source, name: specifier.imported?.name };
+  }) ?? [];
 
 const findExports = (filePath: string, fileAST: Collection) => {
   // named exports
