@@ -11,6 +11,6 @@ export const parseExportDefaultDeclarations = (
     .map(() => ({
       filePath,
       name: 'default',
-      isImport: true,
+      isImport: false,
       isExport: true,
     }));

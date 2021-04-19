@@ -1,4 +1,4 @@
-import { Collection, ExportNamedDeclaration } from 'jscodeshift';
+import { Collection, ExportNamedDeclaration, VariableDeclaration } from 'jscodeshift';
 import { findImportSource } from './findImportSource';
 import { ModuleLink } from '../types';
 
@@ -46,14 +46,31 @@ export const parseExportNamedDeclarations = (
           return [
             ...acc,
             ...exportedSpecifiers,
-            {
-              filePath,
-              name: node.declaration.declarations.map((d) => d.type).join(), // TODO: actually split these up
-              isImport: false,
-              isExport: true,
-            },
+            ...parseVariableDeclaration(filePath, node.declaration.declarations),
           ];
         default:
           return [...acc, ...exportedSpecifiers];
       }
     }, []);
+
+const parseVariableDeclaration = (
+  filePath: string,
+  declarations: VariableDeclaration['declarations'],
+) => {
+  return declarations.map((declaration) => {
+    let name;
+    if (declaration.type === 'VariableDeclarator') {
+      // @ts-expect-error
+      name = declaration.id.name; // TODO: handle edge cases
+    } else {
+      name = declaration.name;
+    }
+
+    return {
+      filePath,
+      name,
+      isImport: false,
+      isExport: true,
+    };
+  });
+};

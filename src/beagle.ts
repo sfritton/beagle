@@ -17,10 +17,10 @@ export const beagle = (
 
   const fullPath = path.resolve(projectRoot);
 
-  console.log(`\nSearching for unused exports in ${chalk.cyan(fullPath)} ...`);
+  console.log(`\nSearching for unused exports in ${chalk.cyan(fullPath)} ...\n`);
 
   const files = getSourceFiles(fullPath);
-  verbose && console.log(`Analyzing ${files.length} files ...`);
+  verbose && console.log(`Analyzing ${files.length} files ...\n`);
   const moduleLinks = findAllModuleLinks(fullPath, files);
 
   const exports = moduleLinks.filter(({ isExport }) => isExport);
@@ -35,7 +35,7 @@ export const beagle = (
     return !matchingImport;
   });
 
-  console.log(chalk.bold(`\nFound ${unusedExports.length} unused exports:`));
+  console.log(chalk.bold(`Found ${unusedExports.length} unused exports:`));
 
   const exportsByFile = unusedExports.reduce<Record<string, string[]>>(
     (filesWithExports, { name: exportName, filePath: exportPath }) => {
